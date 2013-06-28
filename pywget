@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+# pywget V0.1
+#
+# -N and -O option in wget can't work together so i write this.
+# Do what you want with this code (except masturbate). 
+# by JaNachE nache.nache [AT] gmail [DOT] com
+
+import socket
+socket.setdefaulttimeout(10)
+import urllib, os, sys, time
+
+
+class AppURLopener(urllib.FancyURLopener):
+	version = "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; .NET CLR 1.1.4322; .NET CLR 2.0.50727; .NET CLR 3.0.04506.30)"
+
+urllib._urlopener = AppURLopener()
+
+
+
+
+def DownloadAndStorePlease():
+	print "[I] Geting file to", fileOut
+	f = open(fileOut, "w")
+	f.write(urlObject.read())
+	f.close()
+	print "[I] Done."
+
+if len(sys.argv) < 3 or len(sys.argv) > 3:
+	print "Usage: " + sys.argv[0] + " <URL> <OUTPUT FILE>"
+	sys.exit(2)
+
+
+fileGet = sys.argv[1]
+fileOut = sys.argv[2]
+urlObject = urllib.urlopen(fileGet)
+headers = urlObject.info()
+
+if len(headers.getheaders("Last-Modified")) > 0:
+
+	remoteStrFileTime=headers.getheaders("Last-Modified")[0]
+	print "[I] Remote Last-Modified:", remoteStrFileTime
+
+	try:
+		localStrFileTime=time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(os.path.getmtime(fileOut)))
+		print "[I] Local Last-Modified:", localStrFileTime
+
+		localFileTime=time.gmtime(os.path.getmtime(fileOut))
+		remoteFileTime=time.strptime(remoteStrFileTime, "%a, %d %b %Y %H:%M:%S GMT") 
+
+		if localFileTime < remoteFileTime:
+			DownloadAndStorePlease()
+		else:
+			print "[I] Stop."
+	except OSError, (errno, strerror):
+		if errno == 2:
+			print "[I] Local file not found"
+			DownloadAndStorePlease()
+	
+else:
+	print "[W] Last-Modified Not Found."
+	DownloadAndStorePlease()
+
+urlObject.close()
